@@ -52,6 +52,9 @@ default.size.stdout \
 OBJDUMP_LIST += \
 BME_test.list \
 
+OBJCOPY_HEX += \
+BME_test.hex \
+
 
 # All Target
 all: main-build
@@ -60,8 +63,8 @@ all: main-build
 main-build: BME_test.elf secondary-outputs
 
 # Tool invocations
-BME_test.elf BME_test.map: $(OBJS) $(USER_OBJS) E:\Software\Proteus\ projects\ 2\BME280\ Test\code\STM32F401RCTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "BME_test.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"E:\Software\Proteus projects 2\BME280 Test\code\STM32F401RCTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="BME_test.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+BME_test.elf BME_test.map: $(OBJS) $(USER_OBJS) E:\Software\Proteus\ projects\ 2\BME280\ Test\BME280-test\code\STM32F401RCTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "BME_test.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"E:\Software\Proteus projects 2\BME280 Test\BME280-test\code\STM32F401RCTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="BME_test.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -75,12 +78,17 @@ BME_test.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
+BME_test.hex: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objcopy  -O ihex $(EXECUTABLES) "BME_test.hex"
+	@echo 'Finished building: $@'
+	@echo ' '
+
 # Other Targets
 clean:
-	-$(RM) BME_test.elf BME_test.list BME_test.map default.size.stdout
+	-$(RM) BME_test.elf BME_test.hex BME_test.list BME_test.map default.size.stdout
 	-@echo ' '
 
-secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
+secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_HEX)
 
 fail-specified-linker-script-missing:
 	@echo 'Error: Cannot find the specified linker script. Check the linker settings in the build configuration.'

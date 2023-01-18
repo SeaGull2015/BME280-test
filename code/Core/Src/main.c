@@ -48,6 +48,8 @@
 /* Private variables ---------------------------------------------------------*/
  SPI_HandleTypeDef hspi2;
 
+UART_HandleTypeDef huart1;
+
 /* USER CODE BEGIN PV */
 char stringBuffer[128];
 int32_t temper_int;// intercalculation vars
@@ -60,12 +62,18 @@ float tf = 0.0f;/*Переменная, куда записываем значе
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_SPI2_Init(void);
+static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+int _write(int file, char *ptr, int len){
+
+	HAL_UART_Transmit(&huart1, (uint8_t*)ptr, len, HAL_MAX_DELAY);
+	return len;
+}
 uint8_t buf;
 uint8_t BME_regD;
 void BME_ShiftRegs(){
@@ -219,6 +227,7 @@ float BME280_ReadTemperature() // we actually need to do that because we need it
   float temper_float = 0.0f;
   uint32_t temper_raw;
   int32_t val1, val2;// intercalculation vars
+#warning code trips on the next line BME_read_DataU24_BE
   BME_read_DataU24_BE(BME280_REGISTER_TEMPDATA,&temper_raw);
   temper_raw >>= 4;
 
@@ -239,14 +248,13 @@ float BME280_ReadTemperature() // we actually need to do that because we need it
 float BME280_ReadPressure()
 
 {
-
   float press_float = 0.0f;
   float temper_float = 0.0f;
   uint32_t press_raw, pres_int;
   int64_t val1, val2, p;
 
+#warning code trips on read temp
   temper_float = BME280_ReadTemperature();
-
   BME_read_DataU24_BE(BME280_REGISTER_PRESSUREDATA,&press_raw);
   press_raw >>= 4;
 
@@ -326,14 +334,18 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_SPI2_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  BME280_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	//printf("hello\n"); // if I have set the frequency on 8 MHZ the uart doesn' work
+	float result = BME280_ReadPressure();
+	HAL_Delay(1000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -421,6 +433,39 @@ static void MX_SPI2_Init(void)
 }
 
 /**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -432,6 +477,7 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, nOE_Pin|LATCH_Pin, GPIO_PIN_RESET);
@@ -446,6 +492,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
 
 /* USER CODE END 4 */
 
