@@ -230,7 +230,6 @@ float BME280_ReadTemperature() // we actually need to do that because we need it
   int32_t val1, val2;// intercalculation vars
 #warning code trips on the next line BME_read_DataU24_BE
   BME_read_DataU24_BE(BME280_REGISTER_TEMPDATA,&temper_raw);
-  printf("hello\r\n");
   temper_raw >>= 4;
 
   val1 = ((((temper_raw>>3) - ((int32_t)CalibData.dig_T1 <<1))) * // no idea what is going on
