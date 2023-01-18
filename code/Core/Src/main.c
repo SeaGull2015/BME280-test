@@ -78,9 +78,10 @@ uint8_t buf;
 uint8_t BME_regD;
 void BME_ShiftRegs(){
 			HAL_GPIO_WritePin(BME_nOE_GPIO_Port, BME_nOE_Pin, 1); //shiftreg 2 HiZ
+			uint8_t tbuf;
 			HAL_GPIO_WritePin(BME_LATCH_GPIO_Port, BME_LATCH_Pin, 0);  //отключаем защёлку
 
-			HAL_SPI_TransmitReceive(&hspi2, &BME_regD, &buf, 1, 5000);  //отправляем данные для сдвигового регистра со светодиодами
+			HAL_SPI_TransmitReceive(&hspi2, &BME_regD, &tbuf, 1, 5000);  //отправляем данные для сдвигового регистра со светодиодами
 
 			HAL_GPIO_WritePin(BME_LATCH_GPIO_Port, BME_LATCH_Pin, 1);  //включаем защёлку
 			HAL_GPIO_WritePin(BME_nOE_GPIO_Port, BME_nOE_Pin, 0);  //shitfreg вывести из HiZ
@@ -229,6 +230,7 @@ float BME280_ReadTemperature() // we actually need to do that because we need it
   int32_t val1, val2;// intercalculation vars
 #warning code trips on the next line BME_read_DataU24_BE
   BME_read_DataU24_BE(BME280_REGISTER_TEMPDATA,&temper_raw);
+  printf("hello\r\n");
   temper_raw >>= 4;
 
   val1 = ((((temper_raw>>3) - ((int32_t)CalibData.dig_T1 <<1))) * // no idea what is going on
@@ -254,6 +256,7 @@ float BME280_ReadPressure()
   int64_t val1, val2, p;
 
 #warning code trips on read temp
+
   temper_float = BME280_ReadTemperature();
   BME_read_DataU24_BE(BME280_REGISTER_PRESSUREDATA,&press_raw);
   press_raw >>= 4;
@@ -336,6 +339,8 @@ int main(void)
   MX_SPI2_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+  HAL_Delay(1000);
+  //printf("innit\r\n");
   BME280_Init();
   /* USER CODE END 2 */
 
@@ -344,8 +349,10 @@ int main(void)
   while (1)
   {
 	//printf("hello\n"); // if I have set the frequency on 8 MHZ the uart doesn' work
+	//float result = BME280_ReadPressure();
 	float result = BME280_ReadPressure();
-	HAL_Delay(1000);
+	HAL_Delay(2000);
+	printf("%f\r\n", result);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -370,10 +377,14 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 6;
+  RCC_OscInitStruct.PLL.PLLN = 96;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV6;
+  RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -383,10 +394,10 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV2;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV4;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
   {
@@ -448,7 +459,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
+  huart1.Init.BaudRate = 9600;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -476,6 +487,7 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
 

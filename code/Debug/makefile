@@ -64,7 +64,7 @@ main-build: BME_test.elf secondary-outputs
 
 # Tool invocations
 BME_test.elf BME_test.map: $(OBJS) $(USER_OBJS) E:\Software\Proteus\ projects\ 2\BME280\ Test\BME280-test\code\STM32F401RCTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "BME_test.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"E:\Software\Proteus projects 2\BME280 Test\BME280-test\code\STM32F401RCTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="BME_test.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+	arm-none-eabi-gcc -o "BME_test.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"E:\Software\Proteus projects 2\BME280 Test\BME280-test\code\STM32F401RCTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="BME_test.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

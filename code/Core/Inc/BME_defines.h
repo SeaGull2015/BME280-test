@@ -8,6 +8,7 @@
 #ifndef INC_BME_DEFINES_H_
 #define INC_BME_DEFINES_H_
 
+#define BME_CS_ID 3
 #define BME_nOE_Pin GPIO_PIN_13
 #define BME_nOE_GPIO_Port GPIOC
 #define BME_LATCH_Pin GPIO_PIN_1
